@@ -10,5 +10,8 @@ AWS requests with V4 Signature using RestSharp
 ## Permission
 An individual or an organization is fully permitted to use this code.
 
+## Usage
+go to program.cs and everything is self explanatory.
+
 ### Developer
 Sooraj Kumar
