@@ -19,8 +19,5 @@ public class Aws4SignContext
     public string SecretKey { get; }
     public DateTimeOffset Now { get; }
     public string AmzDate { get; }
-    internal string GetResource()
-    {
-        return string.Join("/", CompleteUrl.AbsolutePath.Split('/').Select(Uri.EscapeDataString));
-    }
+    public string Resource => string.Join("/", CompleteUrl.AbsolutePath.Split('/').Select(Uri.EscapeDataString));
 }

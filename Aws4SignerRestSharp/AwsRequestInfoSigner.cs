@@ -30,6 +30,6 @@ public class AwsRequestInfoSigner : Aws4SignerBase
     private void AddBasicInfo(RestRequest request)
     {
         Builder.Append(request.Method.ToString().ToUpper() + "\n");
-        Builder.Append(Context.GetResource() + "\n");
+        Builder.Append(Context.Resource + "\n");
     }
 }

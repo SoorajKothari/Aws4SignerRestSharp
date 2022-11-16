@@ -2,6 +2,7 @@
 using System.Security.Cryptography;
 using System.Text;
 namespace Aws4SignerRestSharp;
+#nullable enable
 public class AwsRequestHeadersSigner : Aws4SignerBase
 {
     private const string EMPTY_STRING_HASH = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
@@ -14,6 +15,7 @@ public class AwsRequestHeadersSigner : Aws4SignerBase
     private const string SignedHeaders = "SignedHeaders=";
     private const string Signature = "Signature=";
     private const string Aws4 = "AWS4";
+
     public AwsRequestHeadersSigner(Aws4SignContext context, StringBuilder builder) : base(context, builder)
     {
     }
@@ -59,11 +61,11 @@ public class AwsRequestHeadersSigner : Aws4SignerBase
 
         void Sign(Parameter header)
         {
-            Builder.Append(header.Name.ToLowerInvariant());
+            Builder.Append(header.Name?.ToLowerInvariant());
             Builder.Append(":");
             Builder.Append(string.Join(",", header.Value));
             Builder.Append("\n");
-            signedHeadersList.Add(header.Name.ToLowerInvariant());
+            signedHeadersList.Add(header.Name!.ToLowerInvariant());
         }
         Builder.Append("\n");
         return string.Join(";", signedHeadersList);
@@ -72,7 +74,7 @@ public class AwsRequestHeadersSigner : Aws4SignerBase
     private IEnumerable<Parameter> GetHeaders(RestRequest request)
     {
         return request.Parameters.Where(x => x.Type is ParameterType.HttpHeader)
-            .OrderBy(a => a.Name.ToLowerInvariant(), StringComparer.OrdinalIgnoreCase);
+            .OrderBy(a => a.Name!.ToLowerInvariant(), StringComparer.OrdinalIgnoreCase);
     }
 
     private static byte[] GetHmacSha256(byte[] key, string data)

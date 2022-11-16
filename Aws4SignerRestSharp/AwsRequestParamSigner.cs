@@ -2,38 +2,47 @@
 using System.Web;
 using System.Collections.Specialized;
 using System.Text;
-namespace Aws4SignerRestSharp
+namespace Aws4SignerRestSharp;
+#nullable enable
+public class AwsRequestParamSigner : Aws4SignerBase
 {
-    public class AwsRequestParamSigner : Aws4SignerBase
+    public AwsRequestParamSigner(Aws4SignContext context, StringBuilder builder) : base(context, builder)
     {
-        public AwsRequestParamSigner(Aws4SignContext context, StringBuilder builder) : base(context, builder)
-        {
-        }
+    }
 
-        public override void Sign(RestRequest request)
-        {
-            var querystring = HttpUtility.ParseQueryString(Context.CompleteUrl.Query);
-            SignQueryParams(querystring);
-        }
+    public override void Sign(RestRequest request)
+    {
+        var querystring = HttpUtility.ParseQueryString(Context.CompleteUrl.Query);
+        SignQueryParams(querystring);
+    }
 
-        private void SignQueryParams(NameValueCollection collection)
-        {
-            var values = new SortedDictionary<string, IEnumerable<string>>(StringComparer.Ordinal);
-            foreach (var key in collection.AllKeys)
-            {
-                if (key == null)
-                    values.Add(Uri.EscapeDataString(collection[key]), new[] { $"{Uri.EscapeDataString(collection[key])}=" });
-                else
-                {
-                    var queryValues = collection[key].Split(',').OrderBy(v => v)
-                        .Select(v => $"{Uri.EscapeDataString(key)}={Uri.EscapeDataString(v)}");
-                    values.Add(Uri.EscapeDataString(key), queryValues);
-                }
-            }
-            var queryParams = values.SelectMany(a => a.Value);
-            var canonicalQueryParams = string.Join("&", queryParams);
-            Builder.Append(canonicalQueryParams + "\n");
-        }
+    private void SignQueryParams(NameValueCollection collection)
+    {
+        var parsedValues = new SortedDictionary<string, IEnumerable<string>>(StringComparer.Ordinal);
+        foreach (var key in collection.AllKeys)
+            Process(key);
 
+        void Process(string? key)
+        {
+            string value = collection[key]!;
+            if (key == null)
+                parsedValues.Add(Uri.EscapeDataString(value), new[] { $"{Uri.EscapeDataString(value)}=" });
+            else
+                parsedValues.Add(Uri.EscapeDataString(key), GetValues(key, value));
+        }
+        Add(parsedValues);
+    }
+
+    private void Add(SortedDictionary<string, IEnumerable<string>> parsedValues)
+    {
+        var queryParams = parsedValues.SelectMany(a => a.Value);
+        var canonicalQueryParams = string.Join("&", queryParams);
+        Builder.Append(canonicalQueryParams + "\n");
+    }
+
+    private static IEnumerable<string> GetValues(string key, string value)
+    {
+        return value.Split(',').OrderBy(v => v)
+            .Select(v => $"{Uri.EscapeDataString(key)}={Uri.EscapeDataString(v)}");
     }
 }
